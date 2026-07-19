@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "The user profile document",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The user's display name",
+          "maxLength": 128
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "URL to the user's avatar"
+        },
+        "streak": {
+          "type": "integer",
+          "description": "User learning streak count"
+        },
+        "badges": {
+          "type": "array",
+          "description": "List of unlocked badges"
+        },
+        "dailyHoursGoal": {
+          "type": "number",
+          "description": "Daily target hours"
+        },
+        "hoursLoggedToday": {
+          "type": "number",
+          "description": "Hours studied today"
+        },
+        "upcomingSession": {
+          "type": "object",
+          "description": "Information about the next study session"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "streak", "badges"]
+    },
+    "Roadmap": {
+      "title": "Roadmap",
+      "description": "A generated skill learning roadmap",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the roadmap",
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the roadmap",
+          "maxLength": 1000
+        },
+        "durationHrs": {
+          "type": "number",
+          "description": "Estimated total duration in hours"
+        },
+        "milestones": {
+          "type": "array",
+          "description": "List of milestones in the roadmap"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["title", "description", "durationHrs", "milestones"]
+    },
+    "PlanItem": {
+      "title": "PlanItem",
+      "description": "Today's dynamic checklist planner items",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Checklist task description",
+          "maxLength": 256
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the task is checked off"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["text", "completed"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile with configurations and stats"
+    },
+    "/users/{userId}/roadmaps/{roadmapId}": {
+      "schema": "Roadmap",
+      "description": "Saved and generated roadmaps for this specific user"
+    },
+    "/users/{userId}/planItems/{itemId}": {
+      "schema": "PlanItem",
+      "description": "Daily study checklist tasks"
+    }
+  }
+}

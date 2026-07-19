@@ -1,0 +1,6 @@
+{
+  "name": "RoadmapAI",
+  "description": "An installable PWA learning coach using Generative AI to turn learning goals into structured roadmaps, study plans, assessments, and adaptive motivation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

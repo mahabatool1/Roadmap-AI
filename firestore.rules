@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Primitives and Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 3. Standalone Validation Helpers (The Anti-Update-Gap)
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['name', 'streak', 'badges'])
+        && data.name is string && data.name.size() <= 128
+        && data.streak is int
+        && data.badges is list
+        && (!data.keys().contains('dailyHoursGoal') || data.dailyHoursGoal is number)
+        && (!data.keys().contains('hoursLoggedToday') || data.hoursLoggedToday is number);
+    }
+
+    function isValidRoadmap(data) {
+      return data.keys().hasAll(['title', 'description', 'durationHrs', 'milestones'])
+        && data.title is string && data.title.size() <= 200
+        && data.description is string && data.description.size() <= 1000
+        && (data.durationHrs is int || data.durationHrs is float)
+        && data.milestones is list;
+    }
+
+    function isValidPlanItem(data) {
+      return data.keys().hasAll(['text', 'completed'])
+        && data.text is string && data.text.size() <= 256
+        && data.completed is bool;
+    }
+
+    // 4. Secured Path Mapping for Users, Roadmaps, and Plan Items
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(incoming());
+      allow update: if isOwner(userId) && isValidUserProfile(incoming());
+      allow delete: if isOwner(userId);
+
+      // Roadmaps Subcollection
+      match /roadmaps/{roadmapId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(roadmapId) && isValidRoadmap(incoming());
+        allow update: if isOwner(userId) && isValidId(roadmapId) && isValidRoadmap(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // Today's Plan Checklist Items Subcollection
+      match /planItems/{itemId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(itemId) && isValidPlanItem(incoming());
+        allow update: if isOwner(userId) && isValidId(itemId) && isValidPlanItem(incoming()) && (
+          // Action 1: Toggle completed field
+          incoming().diff(existing()).affectedKeys().hasOnly(['completed']) ||
+          // Action 2: Change checklist item text
+          incoming().diff(existing()).affectedKeys().hasOnly(['text'])
+        );
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}
