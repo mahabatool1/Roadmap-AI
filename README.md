@@ -69,8 +69,7 @@ All core features are implemented and fully functional — roadmap generation, A
 
 ---
 
-## 👩‍💻 Team — Busy Bees
+## Builder
 
 - Maha Batool
-- Ayesha Mansha
-- Ezza Azmat
+
